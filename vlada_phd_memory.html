@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>🎓 Vlada's PhD Challenge</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;1,400&family=Libre+Franklin:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f7f4ee; --ink: #1a1208; --ink2: #5c4a28; --ink3: #a0896a;
+  --gold: #c9922a; --gold-light: #f0d9a8; --gold-pale: #fdf6e8;
+  --surface: #ffffff; --surface2: #f0ebe0; --border: #ddd3bc;
+  --green: #1a5c3a; --radius: 12px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html { background: var(--bg); }
+body { font-family: 'Libre Franklin', sans-serif; color: var(--ink); min-height: 100vh; }
+body::before {
+  content: ''; position: fixed; inset: 0; z-index: 0;
+  background-image: radial-gradient(circle at 15% 20%, rgba(201,146,42,0.08) 0%, transparent 50%), radial-gradient(circle at 85% 80%, rgba(201,146,42,0.06) 0%, transparent 50%);
+  pointer-events: none;
+}
+#app { position: relative; z-index: 1; min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
+.screen { width: 100%; max-width: 520px; padding: 2rem 1.25rem 3rem; display: none; flex-direction: column; align-items: center; }
+.screen.active { display: flex; animation: rise 0.4s ease; }
+@keyframes rise { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:none; } }
+.crest { font-size: 3rem; margin-bottom: 0.5rem; }
+.game-title { font-family: 'Playfair Display', serif; font-size: 2rem; color: var(--ink); text-align: center; line-height: 1.2; margin-bottom: 0.3rem; }
+.game-title em { color: var(--gold); font-style: italic; }
+.game-sub { font-size: 0.8rem; color: var(--ink3); letter-spacing: 0.1em; text-transform: uppercase; text-align: center; margin-bottom: 2rem; }
+.divider { width: 60px; height: 1.5px; background: var(--gold); margin: 0 auto 2rem; }
+.input-label { font-size: 0.72rem; color: var(--ink3); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.5rem; align-self: flex-start; width: 100%; }
+.name-input { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.85rem 1rem; font-size: 1rem; font-family: 'Libre Franklin', sans-serif; color: var(--ink); outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+.name-input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,146,42,0.12); }
+.name-input::placeholder { color: var(--ink3); }
+.start-btn { margin-top: 1rem; width: 100%; padding: 0.95rem; background: var(--ink); border: none; border-radius: var(--radius); color: var(--gold-light); font-size: 0.9rem; font-family: 'Libre Franklin', sans-serif; font-weight: 600; cursor: pointer; letter-spacing: 0.08em; text-transform: uppercase; transition: background 0.2s, transform 0.1s; }
+.start-btn:hover { background: #2e2010; }
+.start-btn:active { transform: scale(0.98); }
+.start-btn:disabled { background: var(--surface2); color: var(--ink3); cursor: not-allowed; }
+.hint-box { margin-top: 1.25rem; width: 100%; border: 1px solid var(--gold-light); background: var(--gold-pale); border-radius: var(--radius); padding: 1rem 1.25rem; text-align: center; }
+.hint-box p { font-size: 0.82rem; color: var(--ink2); line-height: 1.6; }
+.hint-box strong { color: var(--gold); }
+.lb-link { margin-top: 1rem; font-size: 0.8rem; color: var(--ink3); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.lb-link:hover { color: var(--gold); }
+#play-screen { padding-top: 1rem; }
+.top-bar { width: 100%; display: grid; grid-template-columns: 1fr auto auto auto; gap: 8px; align-items: center; padding: 0.7rem 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 0.75rem; }
+.player-name { font-size: 0.85rem; color: var(--ink2); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.top-stat { text-align: center; padding: 0 0.5rem; border-left: 1px solid var(--border); }
+.top-stat .val { font-family: 'Playfair Display', serif; font-size: 1.1rem; color: var(--gold); display: block; }
+.top-stat .lbl { font-size: 0.62rem; color: var(--ink3); text-transform: uppercase; letter-spacing: 0.06em; }
+.progress-wrap { width: 100%; height: 3px; background: var(--border); border-radius: 2px; margin-bottom: 0.75rem; }
+.progress-fill { height: 3px; background: var(--gold); border-radius: 2px; transition: width 0.5s ease; }
+.grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; width: 100%; }
+.card { cursor: pointer; }
+.card-inner { width: 100%; aspect-ratio: 3/4; position: relative; transform-style: preserve-3d; transition: transform 0.5s cubic-bezier(0.4,0,0.2,1); border-radius: 10px; }
+.card.flipped .card-inner, .card.matched .card-inner { transform: rotateY(180deg); }
+.card-face { position: absolute; inset: 0; backface-visibility: hidden; border-radius: 10px; display: flex; align-items: center; justify-content: center; padding: 8px; }
+.card-back-face { background: var(--ink); border: 1px solid #2e2010; flex-direction: column; }
+.back-q { font-family: 'Playfair Display', serif; font-size: 1.4rem; color: var(--gold); opacity: 0.6; }
+.card-front-face { background: var(--surface); border: 1px solid var(--border); transform: rotateY(180deg); flex-direction: column; gap: 5px; text-align: center; padding: 10px 7px; }
+.card-type-badge { font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.08em; padding: 2px 6px; border-radius: 4px; font-weight: 600; flex-shrink: 0; }
+.badge-q { background: var(--ink); color: var(--gold-light); }
+.badge-a { background: var(--gold); color: var(--surface); }
+.card-text { font-size: 0.7rem; color: var(--ink); line-height: 1.35; font-weight: 500; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical; }
+.card-front-illus { background: var(--gold-pale); border: 1px solid var(--gold-light); transform: rotateY(180deg); flex-direction: column; gap: 5px; text-align: center; padding: 10px 7px; }
+.illus-tag { font-size: 0.55rem; text-transform: uppercase; letter-spacing: 0.08em; padding: 2px 5px; border-radius: 4px; font-weight: 600; background: var(--gold); color: white; flex-shrink: 0; }
+.illus-emoji { font-size: 2rem; line-height: 1; }
+.illus-caption { font-size: 0.62rem; color: var(--ink2); line-height: 1.35; font-weight: 500; }
+.card.matched .card-front-face, .card.matched .card-front-illus { background: #eef7f2; border-color: #4caf7d; }
+.card.matched .card-text, .card.matched .illus-caption { color: var(--green); }
+.card.wrong .card-inner { animation: wobble 0.4s ease; }
+@keyframes wobble { 0%,100%{transform:rotateY(180deg)} 25%{transform:rotateY(180deg) rotate(-2deg)} 75%{transform:rotateY(180deg) rotate(2deg)} }
+#win-screen { text-align: center; }
+.win-icon { font-size: 3.5rem; margin-bottom: 0.5rem; }
+.win-title { font-family: 'Playfair Display', serif; font-size: 2rem; margin-bottom: 0.3rem; }
+.win-name { font-size: 0.85rem; color: var(--ink3); margin-bottom: 1.5rem; }
+.win-stats { display: flex; gap: 1rem; justify-content: center; margin-bottom: 1.75rem; width: 100%; }
+.win-stat { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.85rem 0.5rem; }
+.win-stat .v { font-family: 'Playfair Display', serif; font-size: 1.8rem; color: var(--gold); }
+.win-stat .l { font-size: 0.68rem; color: var(--ink3); text-transform: uppercase; letter-spacing: 0.08em; }
+.reveal-card { width: 100%; background: var(--ink); border-radius: var(--radius); padding: 1.25rem 1.5rem; margin-bottom: 0.75rem; text-align: left; position: relative; overflow: hidden; }
+.reveal-card::after { content: '🎓'; position: absolute; right: -8px; top: 50%; transform: translateY(-50%); font-size: 4rem; opacity: 0.08; }
+.reveal-card .rc-lbl { font-size: 0.68rem; color: var(--ink3); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.3rem; }
+.reveal-card .rc-val { font-family: 'Playfair Display', serif; font-size: 1.3rem; color: var(--gold-light); }
+.save-msg { font-size: 0.78rem; color: var(--ink3); margin-bottom: 1rem; }
+.win-btns { display: flex; gap: 0.75rem; width: 100%; }
+.win-btns button { flex: 1; padding: 0.85rem; border-radius: var(--radius); font-family: 'Libre Franklin', sans-serif; font-size: 0.82rem; font-weight: 600; cursor: pointer; letter-spacing: 0.06em; text-transform: uppercase; transition: all 0.2s; }
+.btn-lb { background: var(--surface); border: 1px solid var(--border); color: var(--ink2); }
+.btn-lb:hover { border-color: var(--gold); color: var(--gold); }
+.btn-again { background: var(--ink); border: none; color: var(--gold-light); }
+.btn-again:hover { background: #2e2010; }
+#lb-screen { padding-top: 1.5rem; }
+.lb-header { font-family: 'Playfair Display', serif; font-size: 1.8rem; text-align: center; margin-bottom: 0.3rem; }
+.lb-sub { font-size: 0.78rem; color: var(--ink3); text-align: center; margin-bottom: 1.5rem; letter-spacing: 0.06em; text-transform: uppercase; }
+.lb-table { width: 100%; }
+.lb-row { display: grid; grid-template-columns: 36px 1fr 56px 56px; gap: 8px; align-items: center; padding: 0.65rem 0.75rem; border-radius: 8px; margin-bottom: 3px; }
+.lb-row.hdr { font-size: 0.65rem; color: var(--ink3); text-transform: uppercase; letter-spacing: 0.08em; padding-bottom: 0.5rem; margin-bottom: 4px; border-bottom: 1px solid var(--border); }
+.lb-row:not(.hdr) { background: var(--surface); border: 1px solid var(--border); }
+.lb-row.r1 { background: #fdf8ec; border-color: var(--gold); }
+.lb-row.r2 { background: #f5f5f7; border-color: #b0b8c4; }
+.lb-row.r3 { background: #fdf2e9; border-color: #c98040; }
+.lb-rank { font-size: 1rem; text-align: center; }
+.lb-name { font-size: 0.88rem; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lb-moves, .lb-time { font-size: 0.82rem; color: var(--ink2); text-align: right; font-weight: 600; }
+.you-tag { display: inline-block; font-size: 0.6rem; background: var(--gold); color: white; border-radius: 3px; padding: 1px 4px; margin-left: 5px; vertical-align: middle; font-weight: 600; }
+.lb-empty { text-align: center; padding: 2.5rem; color: var(--ink3); font-size: 0.88rem; }
+.lb-loading { text-align: center; padding: 1.5rem; color: var(--ink3); font-size: 0.82rem; }
+.back-btn { margin-top: 1.5rem; width: 100%; padding: 0.85rem; background: transparent; border: 1px solid var(--border); border-radius: var(--radius); color: var(--ink2); font-family: 'Libre Franklin', sans-serif; font-size: 0.82rem; font-weight: 600; cursor: pointer; letter-spacing: 0.06em; text-transform: uppercase; transition: all 0.2s; }
+.back-btn:hover { border-color: var(--gold); color: var(--gold); }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div id="name-screen" class="screen active">
+    <div class="crest">🎓</div>
+    <h1 class="game-title">Vlada's PhD<br><em>Memory Challenge</em></h1>
+    <p class="game-sub">Charité Berlin · 11. mart</p>
+    <div class="divider"></div>
+    <label class="input-label">Tvoje ime</label>
+    <input id="name-input" class="name-input" type="text" placeholder="Upiši ime..." maxlength="20" autocomplete="off" />
+    <button id="start-btn" class="start-btn" disabled>Počni igru</button>
+    <div class="hint-box">
+      <p>Spoji svako <strong>pitanje</strong> sa tačnim <strong>odgovorom</strong><br>i otkrij lokaciju i vreme proslave! 🥂</p>
+    </div>
+    <span class="lb-link" onclick="goLb()">Pogledaj rang listu →</span>
+  </div>
+
+  <div id="play-screen" class="screen">
+    <div class="top-bar">
+      <div class="player-name" id="disp-name">—</div>
+      <div class="top-stat"><span class="val" id="s-moves">0</span><span class="lbl">poteza</span></div>
+      <div class="top-stat"><span class="val" id="s-pairs">0/10</span><span class="lbl">parova</span></div>
+      <div class="top-stat"><span class="val" id="s-time">0s</span><span class="lbl">vreme</span></div>
+    </div>
+    <div class="progress-wrap"><div class="progress-fill" id="prog" style="width:0%"></div></div>
+    <div class="grid" id="grid"></div>
+  </div>
+
+  <div id="win-screen" class="screen">
+    <div class="win-icon">🥂</div>
+    <div class="win-title">Bravo!</div>
+    <div class="win-name" id="win-name-line">Odlično si odradio!</div>
+    <div class="win-stats">
+      <div class="win-stat"><div class="v" id="w-moves">—</div><div class="l">Poteza</div></div>
+      <div class="win-stat"><div class="v" id="w-time">—</div><div class="l">Vreme</div></div>
+    </div>
+    <div class="reveal-card">
+      <div class="rc-lbl">📍 Lokacija proslave</div>
+      <div class="rc-val">Mokranjceva 18, Dobanovci</div>
+    </div>
+    <div class="reveal-card">
+      <div class="rc-lbl">🗓 Datum i vreme</div>
+      <div class="rc-val">23. maj u 15:00h</div>
+    </div>
+    <p class="save-msg" id="save-msg">Čuvam rezultat...</p>
+    <div class="win-btns">
+      <button class="btn-lb" onclick="goLb()">🏆 Rang lista</button>
+      <button class="btn-again" onclick="goName()">Igraj ponovo</button>
+    </div>
+  </div>
+
+  <div id="lb-screen" class="screen">
+    <div class="lb-header">🏆 Rang lista</div>
+    <div class="lb-sub">Po broju poteza, pa po vremenu</div>
+    <div class="lb-table" id="lb-table"><div class="lb-loading">Učitavam...</div></div>
+    <button class="back-btn" onclick="goName()">← Nazad</button>
+  </div>
+
+</div>
+<script>
+const PAIRS = [
+  { q:{type:'text',text:"U kojoj nedelji u godini je Vlada odbranio PhD?"}, a:{type:'text',text:"11. nedelja 🤯"} },
+  { q:{type:'text',text:"Gde je Vlada odbranio PhD?"}, a:{type:'illus',emoji:"🏥🇩🇪",caption:"Charité Universitätsmedizin Berlin\nosnovana 1710. kao karantinska bolnica zbog bubonske kuge"} },
+  { q:{type:'text',text:"Kojom tehnikom je Vlada vizualizovao glikokaliks?"}, a:{type:'illus',emoji:"🔬✨",caption:"Elektronska mikroskopija"} },
+  { q:{type:'text',text:"Šta je Vlada otkrio o strukturi glikokaliksa?"}, a:{type:'illus',emoji:"🧬🔍",caption:"Trojna struktura, a ne dvojna!\nOtkriveno krioelektronskom mikroskopijom"} },
+  { q:{type:'text',text:"Šta je glikokaliks?"}, a:{type:'text',text:"Šećerni sloj na površini svake ćelije"} },
+  { q:{type:'text',text:"Koja je bila tema Vladine teze?"}, a:{type:'text',text:"Vizualizacija glikokaliksa u plućima 🫁"} },
+  { q:{type:'text',text:"Ako je glikokaliks oštećen, kojoj infekciji smo skloni?"}, a:{type:'text',text:"Pneumokoknoj pneumoniji 🦠"} },
+  { q:{type:'text',text:"Potencijalni protektivni faktori za pneumoniju?"}, a:{type:'text',text:"Heparin sulfat i hijaluronska kiselina"} },
+  { q:{type:'text',text:"Koliko puta je data Nobelova nagrada za elektronsku mikroskopiju?"}, a:{type:'text',text:"Dva puta — 1986. i 2017. 🏆"} },
+  { q:{type:'text',text:"Gde je otkriven elektronski mikroskop?"}, a:{type:'illus',emoji:"🏛️🔭",caption:"Tehnički univerzitet u Berlinu\n1932. godine"} },
+];
+
+const KEY='vlada_phd_lb_v3';
+let pName='',cards=[],flipped=[],matched=0,moves=0,secs=0,timer=null,locked=false,lastMoves=0,lastSecs=0;
+
+async function sGet(k){try{return await window.storage.get(k,true);}catch(e){return null;}}
+async function sSet(k,v){try{return await window.storage.set(k,v,true);}catch(e){return null;}}
+
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0);}
+function goName(){show('name-screen');}
+function goLb(){show('lb-screen');loadLb();}
+
+const ni=document.getElementById('name-input');
+const sb=document.getElementById('start-btn');
+ni.addEventListener('input',()=>{sb.disabled=!ni.value.trim();});
+ni.addEventListener('keydown',e=>{if(e.key==='Enter'&&ni.value.trim())startGame();});
+sb.addEventListener('click',()=>{if(ni.value.trim())startGame();});
+
+function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
+
+function makeFront(d,role){
+  if(d.type==='illus'){
+    return `<div class="card-face card-front-illus">
+      <span class="illus-tag">${role==='q'?'Pitanje':'Odgovor'}</span>
+      <span class="illus-emoji">${d.emoji}</span>
+      <span class="illus-caption">${escH(d.caption)}</span>
+    </div>`;
+  }
+  return `<div class="card-face card-front-face">
+    <span class="card-type-badge ${role==='q'?'badge-q':'badge-a'}">${role==='q'?'Pitanje':'Odgovor'}</span>
+    <span class="card-text">${escH(d.text)}</span>
+  </div>`;
+}
+
+function startGame(){
+  pName=ni.value.trim();
+  document.getElementById('disp-name').textContent=pName;
+  clearInterval(timer);flipped=[];matched=0;moves=0;secs=0;locked=false;timer=null;
+  document.getElementById('s-moves').textContent='0';
+  document.getElementById('s-pairs').textContent='0/10';
+  document.getElementById('s-time').textContent='0s';
+  document.getElementById('prog').style.width='0%';
+  buildGrid();show('play-screen');
+}
+
+function buildGrid(){
+  const grid=document.getElementById('grid');
+  grid.innerHTML='';
+  let items=[];
+  PAIRS.forEach((p,i)=>{
+    items.push({pairId:i,role:'q',data:p.q});
+    items.push({pairId:i,role:'a',data:p.a});
+  });
+  items=shuffle(items);
+  cards=items.map((item,idx)=>{
+    const el=document.createElement('div');
+    el.className='card';
+    el.innerHTML=`<div class="card-inner">
+      <div class="card-face card-back-face"><span class="back-q">?</span></div>
+      ${makeFront(item.data,item.role)}
+    </div>`;
+    el.addEventListener('click',()=>flip(idx));
+    grid.appendChild(el);
+    return {el,pairId:item.pairId,role:item.role,isFlipped:false,isMatched:false};
+  });
+}
+
+function startTimer(){if(timer)return;timer=setInterval(()=>{secs++;document.getElementById('s-time').textContent=fmt(secs);},1000);}
+
+function flip(idx){
+  const c=cards[idx];
+  if(locked||c.isFlipped||c.isMatched)return;
+  startTimer();
+  c.isFlipped=true;c.el.classList.add('flipped');flipped.push(c);
+  if(flipped.length===2){
+    moves++;document.getElementById('s-moves').textContent=moves;locked=true;
+    const [a,b]=flipped;
+    if(a.pairId===b.pairId&&a.role!==b.role){
+      a.isMatched=b.isMatched=true;a.el.classList.add('matched');b.el.classList.add('matched');
+      matched++;document.getElementById('s-pairs').textContent=matched+'/10';
+      document.getElementById('prog').style.width=(matched*10)+'%';
+      flipped=[];locked=false;
+      if(matched===10){clearInterval(timer);lastMoves=moves;lastSecs=secs;setTimeout(showWin,700);}
+    } else {
+      a.el.classList.add('wrong');b.el.classList.add('wrong');
+      setTimeout(()=>{
+        a.el.classList.remove('flipped','wrong');b.el.classList.remove('flipped','wrong');
+        a.isFlipped=b.isFlipped=false;flipped=[];locked=false;
+      },1100);
+    }
+  }
+}
+
+async function showWin(){
+  document.getElementById('win-name-line').textContent=pName+', odlično si odradio!';
+  document.getElementById('w-moves').textContent=lastMoves;
+  document.getElementById('w-time').textContent=fmt(lastSecs);
+  document.getElementById('save-msg').textContent='Čuvam rezultat...';
+  show('win-screen');
+  const r=await sGet(KEY);let lb=[];
+  if(r&&r.value){try{lb=JSON.parse(r.value);}catch(e){lb=[];}}
+  lb.push({name:pName,moves:lastMoves,seconds:lastSecs,ts:Date.now()});
+  lb.sort((a,b)=>a.moves!==b.moves?a.moves-b.moves:a.seconds-b.seconds);
+  await sSet(KEY,JSON.stringify(lb));
+  document.getElementById('save-msg').textContent='✓ Rezultat sačuvan!';
+}
+
+async function loadLb(){
+  const tbl=document.getElementById('lb-table');
+  tbl.innerHTML='<div class="lb-loading">Učitavam...</div>';
+  const r=await sGet(KEY);let lb=[];
+  if(r&&r.value){try{lb=JSON.parse(r.value);}catch(e){lb=[];}}
+  if(!lb.length){tbl.innerHTML='<div class="lb-empty">Još nema rezultata.<br>Budi prvi! 🚀</div>';return;}
+  const medals=['🥇','🥈','🥉'];
+  let h=`<div class="lb-row hdr"><div>#</div><div>Ime</div><div style="text-align:right">Potezi</div><div style="text-align:right">Vreme</div></div>`;
+  lb.slice(0,15).forEach((e,i)=>{
+    const isYou=e.name===pName&&e.moves===lastMoves&&e.seconds===lastSecs;
+    const cls=i<3?`r${i+1}`:'';
+    h+=`<div class="lb-row ${cls}">
+      <div class="lb-rank">${medals[i]||(i+1)}</div>
+      <div class="lb-name">${escH(e.name)}${isYou?'<span class="you-tag">Ti</span>':''}</div>
+      <div class="lb-moves">${e.moves}</div>
+      <div class="lb-time">${fmt(e.seconds)}</div>
+    </div>`;
+  });
+  tbl.innerHTML=h;
+}
+
+function fmt(s){return s>=60?Math.floor(s/60)+':'+String(s%60).padStart(2,'0'):s+'s';}
+function escH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');}
+</script>
+</body>
+</html>
