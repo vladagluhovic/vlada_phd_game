@@ -2,7 +2,7 @@
 <html lang="sr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>🎓 Vlada's PhD Challenge</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;1,400&family=Libre+Franklin:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -12,9 +12,17 @@
   --surface: #ffffff; --surface2: #f0ebe0; --border: #ddd3bc;
   --green: #1a5c3a; --radius: 12px;
 }
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-html { background: var(--bg); }
-body { font-family: 'Libre Franklin', sans-serif; color: var(--ink); min-height: 100vh; }
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+html { background: var(--bg); height: 100%; }
+body {
+  font-family: 'Libre Franklin', sans-serif; color: var(--ink);
+  min-height: 100vh; min-height: -webkit-fill-available;
+  overscroll-behavior: none;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
 body::before {
   content: ''; position: fixed; inset: 0; z-index: 0;
   background-image: radial-gradient(circle at 15% 20%, rgba(201,146,42,0.08) 0%, transparent 50%), radial-gradient(circle at 85% 80%, rgba(201,146,42,0.06) 0%, transparent 50%);
@@ -30,7 +38,7 @@ body::before {
 .game-sub { font-size: 0.8rem; color: var(--ink3); letter-spacing: 0.1em; text-transform: uppercase; text-align: center; margin-bottom: 2rem; }
 .divider { width: 60px; height: 1.5px; background: var(--gold); margin: 0 auto 2rem; }
 .input-label { font-size: 0.72rem; color: var(--ink3); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 0.5rem; align-self: flex-start; width: 100%; }
-.name-input { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.85rem 1rem; font-size: 1rem; font-family: 'Libre Franklin', sans-serif; color: var(--ink); outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+.name-input { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.85rem 1rem; font-size: 16px; font-family: 'Libre Franklin', sans-serif; color: var(--ink); outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
 .name-input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,146,42,0.12); }
 .name-input::placeholder { color: var(--ink3); }
 .start-btn { margin-top: 1rem; width: 100%; padding: 0.95rem; background: var(--ink); border: none; border-radius: var(--radius); color: var(--gold-light); font-size: 0.9rem; font-family: 'Libre Franklin', sans-serif; font-weight: 600; cursor: pointer; letter-spacing: 0.08em; text-transform: uppercase; transition: background 0.2s, transform 0.1s; }
@@ -52,9 +60,9 @@ body::before {
 .progress-fill { height: 3px; background: var(--gold); border-radius: 2px; transition: width 0.5s ease; }
 .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; width: 100%; }
 .card { cursor: pointer; }
-.card-inner { width: 100%; aspect-ratio: 3/4; position: relative; transform-style: preserve-3d; transition: transform 0.5s cubic-bezier(0.4,0,0.2,1); border-radius: 10px; }
+.card-inner { width: 100%; aspect-ratio: 3/4; position: relative; transform-style: preserve-3d; -webkit-transform-style: preserve-3d; transition: transform 0.5s cubic-bezier(0.4,0,0.2,1), -webkit-transform 0.5s cubic-bezier(0.4,0,0.2,1); border-radius: 10px; }
 .card.flipped .card-inner, .card.matched .card-inner { transform: rotateY(180deg); }
-.card-face { position: absolute; inset: 0; backface-visibility: hidden; border-radius: 10px; display: flex; align-items: center; justify-content: center; padding: 8px; }
+.card-face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 10px; display: flex; align-items: center; justify-content: center; padding: 8px; }
 .card-back-face { background: var(--ink); border: 1px solid #2e2010; flex-direction: column; }
 .back-q { font-family: 'Playfair Display', serif; font-size: 1.4rem; color: var(--gold); opacity: 0.6; }
 .card-front-face { background: var(--surface); border: 1px solid var(--border); transform: rotateY(180deg); flex-direction: column; gap: 5px; text-align: center; padding: 10px 7px; }
