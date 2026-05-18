@@ -107,6 +107,34 @@ body::before {
 .lb-loading { text-align: center; padding: 1.5rem; color: var(--ink3); font-size: 0.82rem; }
 .back-btn { margin-top: 1.5rem; width: 100%; padding: 0.85rem; background: transparent; border: 1px solid var(--border); border-radius: var(--radius); color: var(--ink2); font-family: 'Libre Franklin', sans-serif; font-size: 0.82rem; font-weight: 600; cursor: pointer; letter-spacing: 0.06em; text-transform: uppercase; transition: all 0.2s; }
 .back-btn:hover { border-color: var(--gold); color: var(--gold); }
+.btn-email { background: #6001d2; border: none; color: #fff; }
+.btn-email:hover { background: #4a0098; }
+
+/* Yahoo Mail compose overlay */
+#yahoo-overlay { position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,0.55); display: none; align-items: flex-end; justify-content: center; }
+#yahoo-overlay.open { display: flex; animation: slideUp 0.3s ease; }
+@keyframes slideUp { from { opacity:0; } to { opacity:1; } }
+.yahoo-compose { width: 100%; max-width: 520px; background: #fff; border-radius: 16px 16px 0 0; overflow: hidden; display: flex; flex-direction: column; max-height: 92vh; box-shadow: 0 -4px 24px rgba(0,0,0,0.18); }
+.yahoo-header { background: #6001d2; padding: 0.75rem 1rem; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.yahoo-header-title { color: #fff; font-size: 1rem; font-weight: 600; font-family: 'Libre Franklin', sans-serif; letter-spacing: 0.02em; display: flex; align-items: center; gap: 8px; }
+.yahoo-header-title .y-logo { font-size: 1.1rem; font-weight: 800; letter-spacing: -0.03em; }
+.yahoo-discard { background: transparent; border: none; color: rgba(255,255,255,0.85); font-family: 'Libre Franklin', sans-serif; font-size: 0.85rem; cursor: pointer; padding: 6px 2px; }
+.yahoo-discard:hover { color: #fff; }
+.yahoo-send-btn { background: #fff; border: none; color: #6001d2; font-family: 'Libre Franklin', sans-serif; font-size: 0.82rem; font-weight: 700; padding: 6px 14px; border-radius: 20px; cursor: pointer; letter-spacing: 0.04em; transition: background 0.15s; }
+.yahoo-send-btn:hover { background: #e8d5ff; }
+.yahoo-send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.yahoo-fields { border-bottom: 1px solid #ebebeb; flex-shrink: 0; }
+.yahoo-field-row { display: flex; align-items: center; padding: 0.7rem 1rem; border-bottom: 1px solid #f0f0f0; gap: 10px; }
+.yahoo-field-row:last-child { border-bottom: none; }
+.yahoo-field-lbl { font-size: 0.8rem; color: #666; min-width: 52px; font-family: 'Libre Franklin', sans-serif; }
+.yahoo-field-input { flex: 1; border: none; outline: none; font-size: 0.9rem; font-family: 'Libre Franklin', sans-serif; color: #1a1a1a; background: transparent; }
+.yahoo-field-input::placeholder { color: #bbb; }
+.yahoo-body-wrap { flex: 1; overflow-y: auto; padding: 0.75rem 1rem; }
+.yahoo-body { width: 100%; min-height: 160px; border: none; outline: none; font-size: 0.9rem; font-family: 'Libre Franklin', sans-serif; color: #1a1a1a; line-height: 1.6; resize: none; background: transparent; }
+.yahoo-footer { padding: 0.6rem 1rem; display: flex; align-items: center; gap: 14px; border-top: 1px solid #ebebeb; flex-shrink: 0; }
+.yahoo-footer-icon { font-size: 1.2rem; cursor: pointer; opacity: 0.5; }
+.yahoo-footer-icon:hover { opacity: 0.85; }
+.yahoo-sent-toast { position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); background: #1a1a1a; color: #fff; font-size: 0.82rem; padding: 8px 18px; border-radius: 20px; font-family: 'Libre Franklin', sans-serif; white-space: nowrap; pointer-events: none; }
 </style>
 </head>
 <body>
@@ -158,6 +186,9 @@ body::before {
       <button class="btn-lb" onclick="goLb()">🏆 Rang lista</button>
       <button class="btn-again" onclick="goName()">Igraj ponovo</button>
     </div>
+    <div class="win-btns" style="margin-top:0.5rem">
+      <button class="btn-email" onclick="openYahoo()">📧 Pošalji čestitku emailom</button>
+    </div>
   </div>
 
   <div id="lb-screen" class="screen">
@@ -168,6 +199,40 @@ body::before {
   </div>
 
 </div>
+
+<!-- Yahoo Mail Compose Overlay -->
+<div id="yahoo-overlay">
+  <div class="yahoo-compose">
+    <div class="yahoo-header">
+      <button class="yahoo-discard" onclick="closeYahoo()">Otkaži</button>
+      <div class="yahoo-header-title"><span class="y-logo">yahoo!</span> mail</div>
+      <button class="yahoo-send-btn" id="y-send-btn" onclick="sendYahoo()">Pošalji ▶</button>
+    </div>
+    <div class="yahoo-fields">
+      <div class="yahoo-field-row">
+        <span class="yahoo-field-lbl">Od:</span>
+        <input class="yahoo-field-input" id="yf-from" type="email" placeholder="tvoj@email.com" autocomplete="email" />
+      </div>
+      <div class="yahoo-field-row">
+        <span class="yahoo-field-lbl">Za:</span>
+        <input class="yahoo-field-input" id="yf-to" type="email" placeholder="vlada@email.com" autocomplete="off" />
+      </div>
+      <div class="yahoo-field-row">
+        <span class="yahoo-field-lbl">Predmet:</span>
+        <input class="yahoo-field-input" id="yf-subject" type="text" />
+      </div>
+    </div>
+    <div class="yahoo-body-wrap">
+      <textarea class="yahoo-body" id="yf-body"></textarea>
+    </div>
+    <div class="yahoo-footer">
+      <span class="yahoo-footer-icon" title="Attachment">📎</span>
+      <span class="yahoo-footer-icon" title="Photo">🖼️</span>
+      <span class="yahoo-footer-icon" title="Emoji">😊</span>
+    </div>
+  </div>
+</div>
+
 <script>
 const PAIRS = [
   { q:{type:'text',text:"U kojoj nedelji u godini je Vlada odbranio PhD?"}, a:{type:'text',text:"11. nedelja 🤯"} },
@@ -310,6 +375,43 @@ async function loadLb(){
 
 function fmt(s){return s>=60?Math.floor(s/60)+':'+String(s%60).padStart(2,'0'):s+'s';}
 function escH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');}
+
+function openYahoo(){
+  const subject='Čestitke na odbrani doktorata! 🎓';
+  const body=`Dragi Vlada,\n\nSrdačne čestitke na uspešnoj odbrani doktorske disertacije na Charité Universitätsmedizin Berlin!\n\nTvoje otkriće trojne strukture glikokaliksa je pravo naučno dostignuće i ponos za sve nas.\n\nRadujemo se slavlju — 23. maja u 15:00h, Mokranjceva 18, Dobanovci! 🥂\n\nSvaka čast,\n${pName||'Prijatelj'}`;
+  document.getElementById('yf-subject').value=subject;
+  document.getElementById('yf-body').value=body;
+  document.getElementById('yf-from').value='';
+  document.getElementById('yf-to').value='';
+  const overlay=document.getElementById('yahoo-overlay');
+  overlay.style.display='flex';
+  requestAnimationFrame(()=>overlay.classList.add('open'));
+}
+
+function closeYahoo(){
+  const overlay=document.getElementById('yahoo-overlay');
+  overlay.classList.remove('open');
+  setTimeout(()=>{overlay.style.display='none';},200);
+}
+
+function sendYahoo(){
+  const to=document.getElementById('yf-to').value.trim();
+  const subject=document.getElementById('yf-subject').value.trim();
+  const body=document.getElementById('yf-body').value.trim();
+  const btn=document.getElementById('y-send-btn');
+  btn.disabled=true;
+  btn.textContent='Šaljem...';
+  const mailto='mailto:'+encodeURIComponent(to)+'?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
+  window.location.href=mailto;
+  setTimeout(()=>{
+    btn.textContent='✓ Poslato!';
+    setTimeout(()=>{
+      closeYahoo();
+      btn.disabled=false;
+      btn.textContent='Pošalji ▶';
+    },1200);
+  },600);
+}
 </script>
 </body>
 </html>
